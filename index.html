@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Frontend Performance Optimizer Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg: #020617;
+      --panel: #020617;
+      --card: #020617;
+      --card-soft: #020617;
+      --accent: #38bdf8;
+      --accent-soft: rgba(56, 189, 248, 0.14);
+      --accent-strong: #0ea5e9;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --border: #1f2937;
+      --success: #22c55e;
+      --warning: #facc15;
+      --danger: #f97373;
+      --radius-lg: 18px;
+      --radius: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #020617, #020617 46%, #020617 100%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: stretch;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .app {
+      max-width: 1180px;
+      width: 100%;
+      margin: auto;
+      background: radial-gradient(circle at top left, #020617, #020617f2);
+      border-radius: 24px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      box-shadow:
+        0 30px 80px rgba(15, 23, 42, 0.85),
+        0 0 0 1px rgba(15, 23, 42, 0.9);
+      padding: 20px 20px 16px;
+      display: grid;
+      grid-template-columns: minmax(0, 3.2fr) minmax(260px, 1.4fr);
+      gap: 16px;
+    }
+
+    @media (max-width: 900px) {
+      .app {
+        grid-template-columns: minmax(0, 1fr);
+        padding: 18px 14px 12px;
+      }
+    }
+
+    .left-panel,
+    .right-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .title-block h1 {
+      font-size: 1.35rem;
+      letter-spacing: 0.03em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .title-block h1 span {
+      font-weight: 700;
+    }
+
+    .subtitle {
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-top: 4px;
+      max-width: 480px;
+    }
+
+    .pill {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      background: rgba(15, 23, 42, 0.9);
+      padding: 4px 9px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+
+    .pill-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: #22c55e;
+      box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.3);
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    button {
+      border: none;
+      outline: none;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .btn-primary {
+      padding: 8px 15px;
+      border-radius: 999px;
+      background: radial-gradient(circle at top left, var(--accent), var(--accent-strong));
+      color: #0b1120;
+      font-weight: 600;
+      font-size: 0.86rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 10px 28px rgba(56, 189, 248, 0.42);
+      transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.04);
+      box-shadow: 0 14px 40px rgba(56, 189, 248, 0.5);
+    }
+
+    .btn-secondary {
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.96);
+      border: 1px solid rgba(148, 163, 184, 0.45);
+      color: var(--muted);
+      font-size: 0.78rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.12s ease, border 0.12s ease, color 0.12s ease;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(15, 23, 42, 1);
+      border-color: rgba(148, 163, 184, 0.85);
+      color: var(--text);
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    @media (max-width: 900px) {
+      .metrics-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    .metric-card {
+      background: radial-gradient(circle at top, #020617, #020617e0);
+      border-radius: var(--radius);
+      border: 1px solid rgba(31, 41, 55, 0.9);
+      padding: 9px 11px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-height: 60px;
+    }
+
+    .metric-label {
+      font-size: 0.7rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+    }
+
+    .metric-value {
+      font-size: 1rem;
+      font-weight: 600;
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      margin-top: 2px;
+    }
+
+    .metric-sub {
+      font-size: 0.7rem;
+      color: var(--muted);
+    }
+
+    .metric-value.accent {
+      color: var(--accent);
+    }
+    .metric-value.success {
+      color: var(--success);
+    }
+    .metric-value.warning {
+      color: var(--warning);
+    }
+    .metric-value.danger {
+      color: var(--danger);
+    }
+
+    .playground {
+      flex: 1;
+      margin-top: 6px;
+      background: var(--panel);
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(55, 65, 81, 0.8);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .playground-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge {
+      background: rgba(15, 23, 42, 0.88);
+      border-radius: 999px;
+      padding: 3px 9px;
+      font-size: 0.7rem;
+      color: var(--muted);
+      border: 1px solid rgba(75, 85, 99, 0.85);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .badge-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: #22c55e;
+    }
+
+    .status {
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .status-idle {
+      color: var(--muted);
+    }
+    .status-running {
+      color: var(--accent);
+    }
+    .status-done {
+      color: var(--success);
+    }
+
+    .dashboard-body {
+      display: grid;
+      grid-template-columns: 1.7fr 1.3fr;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    @media (max-width: 900px) {
+      .dashboard-body {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .panel {
+      background: #020617;
+      border-radius: 14px;
+      border: 1px solid rgba(30, 64, 175, 0.4);
+      box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.85);
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .panel-title {
+      font-size: 0.86rem;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .panel-meta {
+      font-size: 0.74rem;
+      color: var(--muted);
+    }
+
+    .score-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 4px;
+    }
+
+    .score-circle {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      border: 6px solid rgba(15, 23, 42, 0.9);
+      box-shadow:
+        0 0 0 1px rgba(30, 64, 175, 0.8),
+        0 0 0 6px rgba(15, 23, 42, 0.96);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .score-circle-inner {
+      position: absolute;
+      inset: 4px;
+      border-radius: inherit;
+      background: radial-gradient(circle at top, rgba(56, 189, 248, 0.18), rgba(15, 23, 42, 0.96));
+    }
+
+    .score-value {
+      position: relative;
+      font-size: 1.3rem;
+      font-weight: 700;
+    }
+
+    .score-label {
+      position: relative;
+      font-size: 0.74rem;
+      color: var(--muted);
+      margin-top: 2px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .score-details {
+      font-size: 0.8rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .score-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.74rem;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.98);
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      margin-top: 4px;
+      width: fit-content;
+    }
+
+    .score-tag-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--success);
+    }
+
+    .suggestions-list {
+      margin-top: 4px;
+      font-size: 0.8rem;
+      color: var(--muted);
+      list-style: disc;
+      padding-left: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .list {
+      font-size: 0.8rem;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-top: 4px;
+    }
+
+    .list-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+    }
+
+    .list-label {
+      color: var(--muted);
+    }
+
+    .list-value {
+      font-weight: 500;
+    }
+
+    .list-value.bad {
+      color: var(--danger);
+    }
+
+    .list-value.ok {
+      color: var(--warning);
+    }
+
+    .list-value.good {
+      color: var(--success);
+    }
+
+    .info-bar {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.74rem;
+      color: var(--muted);
+      margin-top: 6px;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .tag {
+      padding: 2px 7px;
+      border-radius: 999px;
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      background: rgba(15, 23, 42, 0.98);
+    }
+
+    /* Right panel */
+    .right-card {
+      background: radial-gradient(circle at top left, #020617, #020617f2);
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(55, 65, 81, 0.85);
+      padding: 12px 13px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .right-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .log {
+      font-size: 0.78rem;
+      max-height: 220px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding-right: 4px;
+    }
+
+    .log-item {
+      background: rgba(15, 23, 42, 0.96);
+      border-radius: 10px;
+      border: 1px solid rgba(31, 41, 55, 0.95);
+      padding: 6px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .log-top {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.7rem;
+      color: var(--muted);
+    }
+
+    .log-text {
+      font-size: 0.78rem;
+    }
+
+    .log-item.good {
+      border-color: rgba(34, 197, 94, 0.7);
+      background: rgba(22, 163, 74, 0.08);
+    }
+
+    .log-item.bad {
+      border-color: rgba(248, 113, 113, 0.7);
+      background: rgba(248, 113, 113, 0.08);
+    }
+
+    .tip {
+      font-size: 0.78rem;
+      color: var(--muted);
+      padding: 7px 8px;
+      border-radius: 10px;
+      background: rgba(15, 23, 42, 0.96);
+      border: 1px dashed rgba(75, 85, 99, 0.92);
+      line-height: 1.45;
+    }
+
+    .tip strong {
+      color: var(--text);
+    }
+
+    .small-muted {
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+
+    .code-chip {
+      font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco,
+        Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.98);
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      display: inline-block;
+      margin-top: 4px;
+    }
+
+    .note {
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* Hidden repaint test area (real DOM used for synthetic repaint) */
+    #repaintTestArea {
+      position: absolute;
+      left: -9999px;
+      top: -9999px;
+      width: 600px;
+      height: 400px;
+      display: grid;
+      grid-template-columns: repeat(20, 1fr);
+      gap: 2px;
+    }
+
+    #repaintTestArea div {
+      background: #1e293b;
+      border-radius: 3px;
+      height: 10px;
+    }
+
+    #repaintTestArea.alt div {
+      background: #0f172a;
+      height: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- LEFT: DASHBOARD -->
+    <div class="left-panel">
+      <header>
+        <div class="title-block">
+          <div class="pill">
+            <span class="pill-dot"></span>
+            FRONTEND PERFORMANCE · ANALYZER
+          </div>
+          <h1>
+            <span>Performance Optimizer</span>
+          </h1>
+          <p class="subtitle">
+            Analyze DOM complexity, load timing, repaint cost, and CSS structure.
+            The dashboard computes a performance score and suggests optimizations.
+          </p>
+        </div>
+        <div class="controls">
+          <button id="resetBtn" class="btn-secondary" type="button">
+            ↺ Clear Log
+          </button>
+          <button id="analyzeBtn" class="btn-primary" type="button">
+            ▶ Run Analysis
+          </button>
+        </div>
+      </header>
+
+      <!-- Top metrics -->
+      <section class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-label">DOM Elements</div>
+          <div class="metric-value" id="domCountValue">
+            <span id="domCount">–</span>
+          </div>
+          <div class="metric-sub" id="domHint">Awaiting analysis</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Page Load</div>
+          <div class="metric-value" id="loadTimeValue">
+            <span id="loadTime">–</span>
+            <span class="metric-sub">ms</span>
+          </div>
+          <div class="metric-sub" id="loadHint">Using Performance API</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Repaint Test</div>
+          <div class="metric-value" id="repaintValue">
+            <span id="repaintTime">–</span>
+            <span class="metric-sub">ms / run</span>
+          </div>
+          <div class="metric-sub" id="repaintHint">Synthetic layout stress test</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">CSS Rules</div>
+          <div class="metric-value" id="cssRulesValue">
+            <span id="cssRules">–</span>
+          </div>
+          <div class="metric-sub" id="cssHint">Stylesheets & inline styles</div>
+        </div>
+      </section>
+
+      <!-- Main panel -->
+      <section class="playground">
+        <div class="playground-header">
+          <div class="badge">
+            <span class="badge-dot"></span>
+            Current document
+          </div>
+          <div class="badge">
+            Status:
+            <span id="statusText" class="status status-idle">
+              Idle – click "Run Analysis"
+            </span>
+          </div>
+        </div>
+
+        <div class="dashboard-body">
+          <!-- Score panel -->
+          <div class="panel">
+            <div class="panel-title">Performance Score</div>
+            <div class="panel-meta">Custom scoring from 0 – 100 based on DOM, timing, repaint and CSS data.</div>
+
+            <div class="score-wrap">
+              <div class="score-circle">
+                <div class="score-circle-inner"></div>
+                <div>
+                  <div id="scoreValue" class="score-value">–</div>
+                  <div id="scoreLabel" class="score-label">Not calculated</div>
+                </div>
+              </div>
+              <div class="score-details">
+                <div id="scoreSummaryLine">
+                  Click “Run Analysis” to compute your score.
+                </div>
+                <div class="score-tag" id="scoreTag">
+                  <span class="score-tag-dot"></span>
+                  <span id="scoreTagText">Awaiting run</span>
+                </div>
+              </div>
+            </div>
+
+            <ul class="suggestions-list" id="suggestionsList">
+              <li>Check DOM size, load time, and repaint metrics for bottlenecks.</li>
+              <li>Inline styles and heavy CSS rulesets can slow down rendering.</li>
+            </ul>
+
+            <div class="info-bar">
+              <div>Last run: <span id="lastRun" class="small-muted">–</span></div>
+              <div class="tag">Scoring weights: DOM 25 · Load 30 · Repaint 25 · CSS 20</div>
+            </div>
+          </div>
+
+          <!-- Structure analysis -->
+          <div class="panel">
+            <div class="panel-title">DOM & CSS Structure</div>
+            <div class="panel-meta">
+              Snapshot of the current page structure used to derive the performance score.
+            </div>
+
+            <div class="list">
+              <div class="list-row">
+                <span class="list-label">DOM depth (approx.)</span>
+                <span id="domDepthValue" class="list-value">–</span>
+              </div>
+              <div class="list-row">
+                <span class="list-label">Stylesheets accessible</span>
+                <span id="styleSheetCountValue" class="list-value">–</span>
+              </div>
+              <div class="list-row">
+                <span class="list-label">Inline styled elements</span>
+                <span id="inlineStylesValue" class="list-value">–</span>
+              </div>
+              <div class="list-row">
+                <span class="list-label">CSS rule count (same-origin only)</span>
+                <span id="cssRuleCountValue" class="list-value">–</span>
+              </div>
+            </div>
+
+            <div class="note">
+              Note: For security reasons, browsers block reading CSS rules from
+              cross-origin stylesheets. Those sheets still affect runtime performance
+              but are not included in the rule count here.
+            </div>
+          </div>
+        </div>
+
+        <!-- Hidden synthetic repaint test DOM -->
+        <div id="repaintTestArea" aria-hidden="true"></div>
+      </section>
+    </div>
+
+    <!-- RIGHT: LOG & EXPLANATION -->
+    <div class="right-panel">
+      <section class="right-card">
+        <div class="right-title">Analysis Timeline</div>
+        <div id="logContainer" class="log"></div>
+      </section>
+
+      <section class="right-card">
+        <div class="right-title">What this dashboard measures</div>
+        <div class="tip">
+          <strong>DOM complexity:</strong> total element count and approximate maximum tree depth.<br />
+          <strong>Load time:</strong> computed from
+          <span class="code-chip">PerformanceNavigationTiming</span> or the legacy
+          <span class="code-chip">performance.timing</span> API.<br />
+          <strong>Repaint cost:</strong> synthetic test toggling a grid of nodes and forcing layout, then timing the average repaint.<br />
+          <strong>CSS structure:</strong> number of readable <span class="code-chip">styleSheets</span>,
+          total rules, and inline styles.
+        </div>
+        <p class="note">
+          Use this as a learning tool: tweak your page (more DOM, heavy CSS, etc.),
+          re-run the analysis, and observe how the score reacts.
+        </p>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    // ===============================
+    // Utility: DOM traversal & metrics
+    // ===============================
+
+    function getDomElementCount() {
+      return document.getElementsByTagName("*").length;
+    }
+
+    function getApproxDomDepth() {
+      let maxDepth = 0;
+      function traverse(node, depth) {
+        if (node.nodeType !== Node.ELEMENT_NODE) return;
+        if (depth > maxDepth) maxDepth = depth;
+        for (const child of node.children) {
+          traverse(child, depth + 1);
+        }
+      }
+      traverse(document.body, 1);
+      return maxDepth;
+    }
+
+    function getLoadTime() {
+      // Prefer Navigation Timing Level 2
+      try {
+        const navEntries = performance.getEntriesByType("navigation");
+        if (navEntries && navEntries.length > 0) {
+          const nav = navEntries[0];
+          // Difference between navigation start and load event end
+          return Math.round(nav.loadEventEnd - nav.startTime);
+        }
+      } catch (_) {
+        // ignore
+      }
+
+      // Fallback to legacy timing
+      if (performance.timing) {
+        const t = performance.timing;
+        if (t.loadEventEnd && t.navigationStart) {
+          return Math.round(t.loadEventEnd - t.navigationStart);
+        }
+      }
+
+      // If page is already loaded and we can't read timing properly,
+      // approximate using "now" relative to first paint.
+      return null;
+    }
+
+    function measureRepaintCost() {
+      const container = document.getElementById("repaintTestArea");
+      if (!container.dataset.initialized) {
+        // Create a grid of small blocks to exercise layout/paint
+        const total = 300;
+        for (let i = 0; i < total; i++) {
+          const box = document.createElement("div");
+          container.appendChild(box);
+        }
+        container.dataset.initialized = "true";
+      }
+
+      const iterations = 20;
+      const start = performance.now();
+      for (let i = 0; i < iterations; i++) {
+        // Toggle class to change size/background, then force layout
+        container.classList.toggle("alt");
+        // Force sync layout/repaint
+        void container.offsetHeight;
+      }
+      const end = performance.now();
+      const totalTime = end - start;
+      return +(totalTime / iterations).toFixed(2);
+    }
+
+    function analyzeCssStructure() {
+      const result = {
+        styleSheetCount: 0,
+        ruleCount: 0,
+        inlineStyledElements: 0,
+      };
+
+      // Stylesheets
+      const sheets = Array.from(document.styleSheets || []);
+      result.styleSheetCount = sheets.length;
+
+      // CSS rules (same-origin only)
+      let rules = 0;
+      sheets.forEach((sheet) => {
+        try {
+          if (!sheet.cssRules) return;
+          rules += sheet.cssRules.length;
+        } catch (e) {
+          // Cross-origin or restricted stylesheet; ignore
+        }
+      });
+      result.ruleCount = rules;
+
+      // Inline styles
+      const all = document.getElementsByTagName("*");
+      let inlineCount = 0;
+      for (const el of all) {
+        if (el.hasAttribute("style")) inlineCount++;
+      }
+      result.inlineStyledElements = inlineCount;
+
+      return result;
+    }
+
+    // ===============================
+    // Scoring logic
+    // ===============================
+
+    function computeScore(metrics) {
+      const {
+        domCount,
+        loadTime,
+        repaintTime,
+        cssRuleCount,
+        inlineCount,
+      } = metrics;
+
+      let score = 100;
+      const reasons = [];
+
+      // DOM size penalties
+      if (domCount != null) {
+        if (domCount > 1500) {
+          score -= 18;
+          reasons.push("Large DOM tree – consider pruning unused nodes.");
+        } else if (domCount > 800) {
+          score -= 10;
+          reasons.push("Medium-heavy DOM – watch component complexity.");
+        } else if (domCount > 400) {
+          score -= 5;
+          reasons.push("DOM size is reasonable but could be slimmer.");
+        }
+      }
+
+      // Load time penalties
+      if (loadTime != null) {
+        if (loadTime > 4000) {
+          score -= 24;
+          reasons.push("Slow page load – check network waterfall and main thread work.");
+        } else if (loadTime > 2500) {
+          score -= 16;
+          reasons.push("Load time is above ideal – audit images and scripts.");
+        } else if (loadTime > 1500) {
+          score -= 8;
+          reasons.push("Slightly above ideal – some optimizations still possible.");
+        }
+      }
+
+      // Repaint penalties
+      if (repaintTime != null) {
+        if (repaintTime > 50) {
+          score -= 20;
+          reasons.push("Repaint test is expensive – investigate layout thrashing.");
+        } else if (repaintTime > 25) {
+          score -= 10;
+          reasons.push("Repaint cost is noticeable – reduce complex layouts where possible.");
+        } else if (repaintTime > 10) {
+          score -= 5;
+          reasons.push("Repaint cost is okay but can still be improved.");
+        }
+      }
+
+      // CSS rule penalties
+      if (cssRuleCount != null) {
+        if (cssRuleCount > 2000) {
+          score -= 16;
+          reasons.push("Large CSS rule set – consider splitting or trimming unused styles.");
+        } else if (cssRuleCount > 1000) {
+          score -= 10;
+          reasons.push("CSS is getting heavy – check for duplication.");
+        } else if (cssRuleCount > 400) {
+          score -= 5;
+          reasons.push("CSS is mid-sized; watch future growth.");
+        }
+      }
+
+      // Inline style penalties
+      if (inlineCount != null) {
+        if (inlineCount > 100) {
+          score -= 10;
+          reasons.push("Many inline styles – move them into reusable classes.");
+        } else if (inlineCount > 30) {
+          score -= 6;
+          reasons.push("Inline styles are used frequently; refactor into CSS.");
+        } else if (inlineCount > 10) {
+          score -= 3;
+          reasons.push("A few inline styles – acceptable, but could be cleaner.");
+        }
+      }
+
+      // Clamp score
+      if (score < 0) score = 0;
+      if (score > 100) score = 100;
+
+      // Human-readable label
+      let label = "Unknown";
+      if (score >= 90) label = "Excellent";
+      else if (score >= 75) label = "Good";
+      else if (score >= 55) label = "Needs attention";
+      else label = "Heavy / Needs optimization";
+
+      return { score, label, reasons };
+    }
+
+    // ===============================
+    // UI wiring
+    // ===============================
+
+    const domCountEl = document.getElementById("domCount");
+    const domCountValueEl = document.getElementById("domCountValue");
+    const domHintEl = document.getElementById("domHint");
+
+    const loadTimeEl = document.getElementById("loadTime");
+    const loadTimeValueEl = document.getElementById("loadTimeValue");
+    const loadHintEl = document.getElementById("loadHint");
+
+    const repaintTimeEl = document.getElementById("repaintTime");
+    const repaintValueEl = document.getElementById("repaintValue");
+    const repaintHintEl = document.getElementById("repaintHint");
+
+    const cssRulesEl = document.getElementById("cssRules");
+    const cssRulesValueEl = document.getElementById("cssRulesValue");
+    const cssHintEl = document.getElementById("cssHint");
+
+    const domDepthValueEl = document.getElementById("domDepthValue");
+    const styleSheetCountValueEl = document.getElementById("styleSheetCountValue");
+    const inlineStylesValueEl = document.getElementById("inlineStylesValue");
+    const cssRuleCountValueEl = document.getElementById("cssRuleCountValue");
+
+    const statusTextEl = document.getElementById("statusText");
+    const scoreValueEl = document.getElementById("scoreValue");
+    const scoreLabelEl = document.getElementById("scoreLabel");
+    const scoreSummaryLineEl = document.getElementById("scoreSummaryLine");
+    const scoreTagEl = document.getElementById("scoreTag");
+    const scoreTagTextEl = document.getElementById("scoreTagText");
+    const suggestionsListEl = document.getElementById("suggestionsList");
+    const lastRunEl = document.getElementById("lastRun");
+
+    const analyzeBtn = document.getElementById("analyzeBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const logContainer = document.getElementById("logContainer");
+
+    function setMetricState(el, state) {
+      el.classList.remove("success", "warning", "danger", "accent");
+      if (state) el.classList.add(state);
+    }
+
+    function addLogEntry(type, message, detail) {
+      const item = document.createElement("div");
+      item.className = "log-item";
+      if (type === "good") item.classList.add("good");
+      if (type === "bad") item.classList.add("bad");
+
+      const top = document.createElement("div");
+      top.className = "log-top";
+      const time = new Date().toLocaleTimeString(undefined, {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
+      top.innerHTML = `<span>${time}</span><span>${type === "good" ? "✓" : type === "bad" ? "⚠" : "•"}</span>`;
+
+      const text = document.createElement("div");
+      text.className = "log-text";
+      text.textContent = message;
+
+      item.appendChild(top);
+      item.appendChild(text);
+
+      if (detail) {
+        const d = document.createElement("div");
+        d.className = "small-muted";
+        d.textContent = detail;
+        item.appendChild(d);
+      }
+
+      logContainer.prepend(item);
+    }
+
+    function clearLog() {
+      logContainer.innerHTML = "";
+    }
+
+    function setStatus(state, text) {
+      statusTextEl.textContent = text;
+      statusTextEl.classList.remove("status-idle", "status-running", "status-done");
+      if (state === "running") statusTextEl.classList.add("status-running");
+      else if (state === "done") statusTextEl.classList.add("status-done");
+      else statusTextEl.classList.add("status-idle");
+    }
+
+    async function runAnalysis() {
+      setStatus("running", "Running analysis…");
+      addLogEntry("info", "Analysis started", "Collecting DOM, timing, repaint and CSS data.");
+
+      // DOM
+      const domCount = getDomElementCount();
+      const domDepth = getApproxDomDepth();
+
+      domCountEl.textContent = domCount;
+      domDepthValueEl.textContent = domDepth;
+
+      if (domCount < 400) {
+        domHintEl.textContent = "DOM size is light.";
+        setMetricState(domCountValueEl, "success");
+        addLogEntry("good", "DOM size looks healthy.", `Total elements: ${domCount}.`);
+      } else if (domCount < 900) {
+        domHintEl.textContent = "DOM is moderate; keep an eye on growth.";
+        setMetricState(domCountValueEl, "warning");
+        addLogEntry("info", "DOM is moderate.", `Total elements: ${domCount}.`);
+      } else {
+        domHintEl.textContent = "DOM is heavy; consider simplifying structure.";
+        setMetricState(domCountValueEl, "danger");
+        addLogEntry("bad", "DOM appears heavy.", `Total elements: ${domCount}.`);
+      }
+
+      // Load time
+      let loadTime = getLoadTime();
+      if (loadTime == null) {
+        // Fallback: approximate (now since navigation)
+        loadTime = null;
+        loadTimeEl.textContent = "N/A";
+        loadHintEl.textContent = "Load time not available (likely measured after page load).";
+        setMetricState(loadTimeValueEl, "");
+        addLogEntry(
+          "info",
+          "Load timing unavailable.",
+          "Navigation timing could not be read. Try reloading and immediately running analysis."
+        );
+      } else {
+        loadTimeEl.textContent = loadTime;
+        if (loadTime < 1500) {
+          loadHintEl.textContent = "Fast enough for most UIs.";
+          setMetricState(loadTimeValueEl, "success");
+          addLogEntry("good", "Load time is fast.", `${loadTime} ms.`);
+        } else if (loadTime < 2800) {
+          loadHintEl.textContent = "Okay, but can be optimized further.";
+          setMetricState(loadTimeValueEl, "warning");
+          addLogEntry("info", "Load time is moderate.", `${loadTime} ms.`);
+        } else {
+          loadHintEl.textContent = "Slow. Check bundles, images and blocking scripts.";
+          setMetricState(loadTimeValueEl, "danger");
+          addLogEntry("bad", "Load time is high.", `${loadTime} ms.`);
+        }
+      }
+
+      // Repaint test
+      const repaintTime = measureRepaintCost();
+      repaintTimeEl.textContent = repaintTime;
+      if (repaintTime < 10) {
+        repaintHintEl.textContent = "Repaint cost is low.";
+        setMetricState(repaintValueEl, "success");
+        addLogEntry("good", "Repaint test looks cheap.", `${repaintTime} ms average.`);
+      } else if (repaintTime < 25) {
+        repaintHintEl.textContent = "Moderate repaint cost.";
+        setMetricState(repaintValueEl, "warning");
+        addLogEntry("info", "Repaint test is moderate.", `${repaintTime} ms average.`);
+      } else {
+        repaintHintEl.textContent = "Expensive repaint; watch layout thrashing.";
+        setMetricState(repaintValueEl, "danger");
+        addLogEntry("bad", "Repaint test is heavy.", `${repaintTime} ms average.`);
+      }
+
+      // CSS
+      const cssStruct = analyzeCssStructure();
+      const { styleSheetCount, ruleCount, inlineStyledElements } = cssStruct;
+
+      cssRulesEl.textContent = ruleCount;
+      styleSheetCountValueEl.textContent = styleSheetCount;
+      inlineStylesValueEl.textContent = inlineStyledElements;
+      cssRuleCountValueEl.textContent = ruleCount;
+
+      // Hints for CSS rules
+      if (ruleCount < 400) {
+        cssHintEl.textContent = "CSS bundle looks lean.";
+        setMetricState(cssRulesValueEl, "success");
+      } else if (ruleCount < 1000) {
+        cssHintEl.textContent = "CSS size is okay; avoid unnecessary duplication.";
+        setMetricState(cssRulesValueEl, "warning");
+      } else {
+        cssHintEl.textContent = "Large CSS footprint – consider cleanup or code-splitting.";
+        setMetricState(cssRulesValueEl, "danger");
+      }
+
+      addLogEntry(
+        "info",
+        "CSS structure analyzed.",
+        `${styleSheetCount} stylesheet(s), ${ruleCount} rule(s), ${inlineStyledElements} inline-styled element(s).`
+      );
+
+      // Compute score
+      const metricsForScore = {
+        domCount,
+        loadTime,
+        repaintTime,
+        cssRuleCount: ruleCount,
+        inlineCount: inlineStyledElements,
+      };
+
+      const { score, label, reasons } = computeScore(metricsForScore);
+
+      scoreValueEl.textContent = score;
+      scoreLabelEl.textContent = label;
+
+      // Score tag colors
+      scoreTagTextEl.textContent =
+        label === "Excellent"
+          ? "Production-ready performance"
+          : label === "Good"
+          ? "Solid, with room to tune"
+          : label === "Needs attention"
+          ? "Focus on key bottlenecks"
+          : "Heavily loaded UI";
+
+      if (score >= 90) {
+        setMetricState(scoreValueEl, "success");
+      } else if (score >= 75) {
+        setMetricState(scoreValueEl, "accent");
+      } else if (score >= 55) {
+        setMetricState(scoreValueEl, "warning");
+      } else {
+        setMetricState(scoreValueEl, "danger");
+      }
+
+      scoreSummaryLineEl.textContent = `Overall frontend performance score is ${score}/100 (${label}).`;
+
+      // Suggestions list
+      suggestionsListEl.innerHTML = "";
+      if (reasons.length === 0) {
+        const li = document.createElement("li");
+        li.textContent = "No major issues detected. Keep monitoring as the UI evolves.";
+        suggestionsListEl.appendChild(li);
+      } else {
+        reasons.forEach((reason) => {
+          const li = document.createElement("li");
+          li.textContent = reason;
+          suggestionsListEl.appendChild(li);
+        });
+      }
+
+      // Last run timestamp
+      lastRunEl.textContent = new Date().toLocaleString();
+
+      addLogEntry(
+        score >= 75 ? "good" : score >= 55 ? "info" : "bad",
+        `Score: ${score}/100 (${label}).`,
+        reasons[0] || "No significant bottlenecks identified."
+      );
+
+      setStatus("done", "Analysis complete");
+    }
+
+    analyzeBtn.addEventListener("click", () => {
+      runAnalysis();
+    });
+
+    resetBtn.addEventListener("click", () => {
+      clearLog();
+      addLogEntry("info", "Log cleared.", "You can now run a fresh analysis.");
+    });
+
+    // Optional: run once after initial load to show some data automatically
+    window.addEventListener("load", () => {
+      // Slight delay so load events are recorded
+      setTimeout(() => {
+        runAnalysis();
+      }, 300);
+    });
+  </script>
+</body>
+</html>
